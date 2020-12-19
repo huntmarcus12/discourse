@@ -213,14 +213,18 @@ export function acceptance(name, optionsOrCallback) {
         resetSite(currentSettings(), siteChanges);
       }
 
-      getApplication().__registeredObjects__ = false;
-      getApplication().reset();
+      if (!setupApplicationTest) {
+        // Legacy testing environment
+        getApplication().__registeredObjects__ = false;
+        getApplication().reset();
+      }
       this.container = getOwner(this);
       if (loggedIn) {
         updateCurrentUser({
           appEvents: this.container.lookup("service:app-events"),
         });
       }
+
       setURLContainer(this.container);
       setDefaultOwner(this.container);
 
@@ -260,8 +264,12 @@ export function acceptance(name, optionsOrCallback) {
           initializer.teardown(this.container);
         }
       });
-      app.__registeredObjects__ = false;
-      app.reset();
+
+      if (!setupApplicationTest) {
+        // Legacy testing environment
+        app.__registeredObjects__ = false;
+        app.reset();
+      }
 
       // We do this after reset so that the willClearRender will have already fired
       resetWidgetCleanCallbacks();
@@ -303,17 +311,15 @@ export function acceptance(name, optionsOrCallback) {
   if (callback) {
     // New, preferred way
     module(name, function (hooks) {
+      needs.hooks = hooks;
       hooks.beforeEach(setup.beforeEach);
       hooks.afterEach(setup.afterEach);
-      needs.hooks = hooks;
       callback(needs);
 
-      if (setupApplicationTest) {
+      if (setupApplicationTest && getContext) {
         setupApplicationTest(hooks);
-      }
 
-      if (getContext) {
-        needs.hooks.beforeEach(function () {
+        hooks.beforeEach(function () {
           // This hack seems necessary to allow `DiscourseURL` to use the testing router
           let ctx = getContext();
           this.container.registry.unregister("router:main");
