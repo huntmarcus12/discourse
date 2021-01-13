@@ -1,4 +1,4 @@
-import { debounce, next } from "@ember/runloop";
+import { debounce, run } from "@ember/runloop";
 import { isTesting } from "discourse-common/config/environment";
 /**
   Debounce a Javascript function. This means if it's called many times in a time limit it
@@ -8,7 +8,7 @@ import { isTesting } from "discourse-common/config/environment";
 
 export default function () {
   if (isTesting()) {
-    return next(...arguments);
+    return run(...arguments);
   } else {
     return debounce(...arguments);
   }
