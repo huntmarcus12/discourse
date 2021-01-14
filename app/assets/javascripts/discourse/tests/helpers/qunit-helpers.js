@@ -39,6 +39,8 @@ import { setTopicList } from "discourse/lib/topic-list-tracker";
 import sinon from "sinon";
 import siteFixtures from "discourse/tests/fixtures/site-fixtures";
 
+const LEGACY_ENV = !setupApplicationTest;
+
 export function currentUser() {
   return User.create(sessionFixtures["/session/current.json"].current_user);
 }
@@ -207,13 +209,15 @@ export function acceptance(name, optionsOrCallback) {
 
       clearOutletCache();
       clearHTMLCache();
+      if (LEGACY_ENV) {
+        resetPluginApi();
+      }
 
       if (siteChanges) {
         resetSite(currentSettings(), siteChanges);
       }
 
-      if (!setupApplicationTest) {
-        // Legacy testing environment
+      if (LEGACY_ENV) {
         getApplication().__registeredObjects__ = false;
         getApplication().reset();
       }
@@ -244,6 +248,9 @@ export function acceptance(name, optionsOrCallback) {
       resetExtraClasses();
       clearOutletCache();
       clearHTMLCache();
+      if (LEGACY_ENV) {
+        resetPluginApi();
+      }
       clearRewrites();
       initSearchData();
       resetDecorators();
@@ -263,8 +270,7 @@ export function acceptance(name, optionsOrCallback) {
         }
       });
 
-      if (!setupApplicationTest) {
-        // Legacy testing environment
+      if (LEGACY_ENV) {
         app.__registeredObjects__ = false;
         app.reset();
       }
@@ -314,7 +320,7 @@ export function acceptance(name, optionsOrCallback) {
       hooks.afterEach(setup.afterEach);
       callback(needs);
 
-      if (setupApplicationTest && getContext) {
+      if (!LEGACY_ENV && getContext) {
         setupApplicationTest(hooks);
 
         hooks.beforeEach(function () {
